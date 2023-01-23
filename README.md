@@ -1,15 +1,17 @@
 # Hue temperature logger
 
+![Temperature logging](TempLogger.png)
+
 **🌡 Log temperature with Hue Sensors**
 
 **☁️ Save data to InfluxDB**
 
 **📊 Visualize with Grafana**
 
-![Temperature logging](TempLogger.png)
-
 Log temperature from your Philips Hue Motion Sensors (which also log temperature) and save it to InfluxDB to visualize with Grafana. This code only does the logging part, intended to be run on a server or a Raspberry Pi sitting in your home, pushing data to a remote InfluxDB server.
 
+
+## Setup
 Here's what you'll need in order to get this up and running:
 - Philips Hue Motion Sensor
 - Philips Hue Bridge
@@ -17,7 +19,6 @@ Here's what you'll need in order to get this up and running:
 - InfluxDB credentials
 - Grafana
 
-## Setup
 You'll need to clone this repository onto a Raspberry Pi or another server running at home. Next, you'll need to install the dependencies:
 ```
 pip install -r requirements.txt
