@@ -6,7 +6,7 @@ After=multi-user.target
 Environment="PATH=/home/sasha/Hue-Temperature-Logger/venv/bin"
 Environment="PHILIPS_HUE_IP=192.168.1.195"
 Environment="SHEET_URL=https://docs.google.com/spreadsheets/d/your_sheet_id_here/edit#gid=0"
-WorkingDirectory/home/sasha/Hue-Temperature-Logger/
+WorkingDirectory=/home/sasha/Hue-Temperature-Logger/
 ExecStart=/bin/bash -c '/home/sasha/Hue-Temperature-Logger/venv/bin/python /home/sasha/Hue-Temperature-Logger/logger.py > /home/sasha/Hue-Temperature-Logger/log.txt 2>&1'
 RemainAfterExit=no
 Restart=on-failure
