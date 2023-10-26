@@ -26,6 +26,22 @@ import json
 #    write_api.write(bucket=bucket, org=org, record=point)
 
 
+def check_env_vars():
+    '''Check if the required environment variables are set'''
+    required_vars = ['PHILIPS_HUE_IP', 'SHEET_URL']
+    missing_vars = []
+
+    for var in required_vars:
+        if var not in os.environ:
+            missing_vars.append(var)
+
+    if missing_vars:
+        print(f"[PF] The following environment variables are missing: {', '.join(missing_vars)}")
+        return False
+    else:
+        return True
+
+
 def send_to_google_sheets(timestamp, upstairs, downstairs):
     '''Send the data to Google Sheets'''
     # Open the Google Sheet
@@ -69,6 +85,10 @@ def get_sensors(b):
 
 
 if __name__ == '__main__':
+    # Check environment variables
+    if not check_env_vars():
+        exit(1)
+
     # Connect to bridge
     b = None
     while b is None:
