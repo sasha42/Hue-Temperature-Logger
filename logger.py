@@ -2,29 +2,13 @@ import time
 import datetime
 import csv
 import os
+import logging
 from phue import Bridge
-#import influxdb_client, os, time
-#from influxdb_client import InfluxDBClient, Point, WritePrecision
-#from influxdb_client.client.write_api import SYNCHRONOUS
 import gspread
 import json
 
-# Influx DB config
-# token = os.environ.get("INFLUXDB_TOKEN")
-# org = os.environ.get("INFLUXDB_ORG")
-# url = os.environ.get("INFLUXDB_URL")
-# client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
-# bucket="temperature"
-# write_api = client.write_api(write_options=SYNCHRONOUS)
-
-# def write_to_influxdb(temperature, location):
-#    point = (
-#      Point("sensors")
-#      .field("realtemp", temperature)
-#      .tag("location", location)
-#    )
-#    write_api.write(bucket=bucket, org=org, record=point)
-
+# Set up logging
+logging.basicConfig(filename='temperature_logger.log', level=logging.INFO)
 
 def check_env_vars():
     '''Check if the required environment variables are set'''
@@ -36,7 +20,7 @@ def check_env_vars():
             missing_vars.append(var)
 
     if missing_vars:
-        print(f"[PF] The following environment variables are missing: {', '.join(missing_vars)}")
+        logging.error(f"[PF] The following environment variables are missing: {', '.join(missing_vars)}")
         return False
     else:
         return True
@@ -60,13 +44,13 @@ def send_to_google_sheets(timestamp, upstairs, downstairs):
 
 def connect_to_bridge():
     ip = os.environ.get("PHILIPS_HUE_IP")
-    print("Connecting to Philips Hue bridge at {}".format(ip))
+    logging.info("Connecting to Philips Hue bridge at {}".format(ip))
     b = Bridge(ip)
     try:
         b.connect()
         data = b.get_api() # just to check if connection was successful
     except Exception as e:
-        print("Could not connect to Philips Hue bridge: {}".format(e))
+        logging.error("Could not connect to Philips Hue bridge: {}".format(e))
         raise e
     return b
 
@@ -78,9 +62,7 @@ def get_sensors(b):
     with open('sensors.csv', mode='a') as sensor_file:
         sensor_writer = csv.writer(sensor_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         sensor_writer.writerow([timestamp, upstairs, downstairs])
-        # write_to_influxdb(upstairs/100, "upstairs")
-        # write_to_influxdb(downstairs/100, "downstairs")
-    print(timestamp, upstairs, downstairs)
+    logging.info(f"{timestamp} {upstairs} {downstairs}")
     return timestamp, upstairs, downstairs
 
 
@@ -95,7 +77,7 @@ if __name__ == '__main__':
         try:
             b = connect_to_bridge()
         except:
-            print('Could not connect to Philips Hue bridge. Retrying in 10 seconds...')
+            logging.error('Could not connect to Philips Hue bridge. Retrying in 10 seconds...')
             time.sleep(10)
 
     # Connected to bridge, proceed to get sensors
