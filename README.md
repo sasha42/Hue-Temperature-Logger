@@ -4,67 +4,53 @@
 
 **🌡 Log temperature with Hue Sensors**
 
-**☁️ Save data to InfluxDB**
+**☁️ Save data to Google Sheets**
 
-**📊 Visualize with Grafana**
 
-Log temperature from your Philips Hue Motion Sensors (which also log temperature) and save it to InfluxDB to visualize with Grafana. This code only does the logging part, intended to be run on a server or a Raspberry Pi sitting in your home, pushing data to a remote InfluxDB server.
+Log temperature from your Philips Hue Motion Sensors (which also log temperature) and save it to Google Sheets to visualize. This code only does the logging part, intended to be run on a server or a Raspberry Pi sitting in your home, pushing data to Google Sheets.
 
 
 ## Setup
 Here's what you'll need in order to get this up and running:
 - Philips Hue Motion Sensor
-- Philips Hue Bridge
-- Raspberry Pi (or any other server)
-- InfluxDB credentials
-- Grafana
+- The IP of your Philips Hue Bridge
+- Google Sheets URL
+- Google  `service_account.json` file
 
-You'll need to clone this repository onto a Raspberry Pi or another server running at home. Next, you'll need to install the dependencies:
+Install dependencies:
 ```
+# Install dependencies
+git clone git@github.com:sasha42/Hue-Temperature-Logger.git
+cd Hue-Temperature-Logger/
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-You'll need to setup a few environment variables for the script to work:
+Edit logger.service with your own values:
 ```
-export PHILIPS_HUE_IP="192.168.1.10"
-export INFLUXDB_TOKEN="5DcKJF7tLRG22zgh6ui_N8EtjYXp1PMVZWKqf5yBHl-a3_aTGB-BpmkDlWZYJQNX7FjTgl2aRfWcNzQKJLH9P=="
-export INFLUXDB_ORG="Sasha"
-export INFLUXDB_URL="https://eu-central-1-1.aws.cloud2.influxdata.com"
-export INFLUXDB_BUCKET="home"
+Environment="PHILIPS_HUE_IP=192.168.1.xxx"
+Environment="SHEET_URL=https://docs.google.com/spreadsheets/d/your_sheet_id_here/edit#gid=0"
+Update any paths to the correct location
 ```
 
-Then, when you run the script for the first time, you'll need to follow the instructions to authenticate with the Hue Bridge. After that, you can run the script as a cron job or a systemd service.
-
-## Configuring sensors
-I've hardcoded my sensors into the script, but you can easily change that to fit your needs. I used the `Hue Esssentials` app to get the IDs of my sensors, however you can also use a command line tool like `phue`. You can change the sensors on line 28 and 29 to suit your needs:
-```    
-upstairs = b.get_sensor()['14']['state']['temperature']
-downstairs = b.get_sensor()['61']['state']['temperature']
+Copy service file to systemd:
+```
+sudo cp *.service /etc/systemd/system/.
+sudo systemctl enable logger.service
+sudo systemctl start logger.service
 ```
 
-## Grafana dashboard
-Once you have the data in InfluxDB, you can create a Grafana dashboard to visualize it. For my setup, I used both the InfluxDB Cloud and Grafana Cloud to avoid managing the services myself.
+That's it! This should send data to your Google Sheet every 5 minutes.
 
-Here's the query get the data for a single sensor:
-```
-from(bucket: "temperature")
-  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-  |> filter(fn: (r) => r["_measurement"] == "sensors")
-  |> filter(fn: (r) => r["_field"] == "realtemp")
-  |> filter(fn: (r) => r["location"] == "upstairs")
-  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
-  |> yield(name: "mean")
-```
+If something doesn't work, you can try the following commands to debug:
 
-And for the hisotgram:
 ```
-from(bucket: "temperature")
-  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-  |> filter(fn: (r) => r["_measurement"] == "sensors")
-  |> filter(fn: (r) => r["_field"] == "realtemp")
-  |> filter(fn: (r) => r["location"] == "downstairs" or r["location"] == "upstairs")
-  |> timedMovingAverage(every: 1m, period: 1h)
-  |> yield(name: "mean")
+##### Debug
+sudo systemctl status logger.service
+sudo systemctl -q daemon-reload
+journalctl -u logger.service
+cat temperature_logger.log
 ```
 
 ---
