@@ -1,0 +1,15 @@
+[Unit]
+Description=Temperature logger
+After=multi-user.target
+
+[Service]
+Environment="PATH=/home/sasha/Hue-Temperature-Logger/venv/bin"
+WorkingDirectory/home/sasha/Hue-Temperature-Logger/
+ExecStart=/bin/bash -c '/home/sasha/Hue-Temperature-Logger/venv/bin/python /home/sasha/Hue-Temperature-Logger/logger.py > /home/sasha/Hue-Temperature-Logger/log.txt 2>&1'
+RemainAfterExit=no
+Restart=on-failure
+RestartSec=5s
+Type=idle
+
+[Install]
+WantedBy=multi-user.target
